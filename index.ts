@@ -2,40 +2,31 @@ import { Client, Collection, Events, GatewayIntentBits, MessageFlags } from 'dis
 import { DISCORD_TOKEN } from './config.ts';
 import { commands } from './commands/index.ts';
 import type { Command } from './command.ts';
-
-const registry = new Collection<string, Command>();
-for (const command of commands) {
-    registry.set(command.data.name, command);
-}
+import { handleInteraction } from './router/router.ts';
+import { buttons } from "./handlers/index.ts";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
+client.commands = new Collection<string, Command>();
+client.buttons = new Collection();
+client.selectMenus = new Collection();
+client.modals = new Collection();
+
+for (const command of commands) {
+    client.commands.set(command.data.name, command);
+}
+
+for (const button of buttons){
+    client.buttons.set(button.customId, button);
+}
+console.log("Loaded buttons:", [...client.buttons.keys()]);
 client.once(Events.ClientReady, (ready) => {
-    console.log(`logged in as ${ready.user.tag}, serving ${registry.size} command(s)`);
+    console.log(`logged in as ${ready.user.tag}, serving ${client.commands.size} command(s)`);
+    client.commands.forEach(cmd => console.log(cmd.data.name));
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
-
-    const command = registry.get(interaction.commandName);
-    if (!command) {
-        console.error(`no command named ${interaction.commandName}`);
-        return;
-    }
-
-    try {
-        await command.execute(interaction);
-    }
-    catch (error) {
-        console.error(`${interaction.commandName} failed`, error);
-        const body = { content: 'That command failed.', flags: MessageFlags.Ephemeral } as const;
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(body);
-        }
-        else {
-            await interaction.reply(body);
-        }
-    }
+client.on(Events.InteractionCreate, (interaction) => {
+    handleInteraction(interaction, client);
 });
 
 await client.login(DISCORD_TOKEN);

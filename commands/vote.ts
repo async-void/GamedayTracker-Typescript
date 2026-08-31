@@ -12,7 +12,6 @@ export const vote: Command = {
     ),
     async execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply();
-
     const question = interaction.options.getString("question", true);
 
     await interaction.editReply({
