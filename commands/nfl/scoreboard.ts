@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, ContainerBuilder, MessageFlags, SlashCommandBuilder, TextDisplayBuilder } from "discord.js";
 
 import type { Command } from "../../command.ts";
 import type { NflScoreboard } from "../../models/nfl/NflScoreboard.ts";
@@ -37,12 +37,12 @@ export const scoreboard: Command = {
 
             if (state === "post") {
                 // FINAL
-                line = `${awayEmoji} @ ${homeEmoji} || Final`;
+                line = `${awayEmoji}(${away.score}) 🆚 ${homeEmoji}(${home.score}) \\|\\| Final`;
                 finals.push(line);
 
             } else if (state === "in") {
                 // IN PROGRESS → show score
-                line = `${awayEmoji} @ ${homeEmoji} || ${away.score}–${home.score}`;
+                line = `${awayEmoji}(${away.score}) 🆚 ${homeEmoji}(${home.score}) \\|\\| ${away.score}–${home.score}`;
                 inProgress.push(line);
 
             } else {
@@ -61,11 +61,26 @@ export const scoreboard: Command = {
                     day: "numeric"
                 });
 
-                line = `${awayEmoji} @ ${homeEmoji} || ${day} ${time} ET`;
+                line = `${awayEmoji} 🆚 ${homeEmoji} \\|\\| ${day} ${time} ET`;
                 scheduled.push(line);
             }
         }
-        var msg = `**NFL Scoreboard** \t Scheduled Games ${scheduled.length > 0 ? `\n${scheduled.join("\n")}` : "None"} \n\n **In Progress** ${inProgress.length > 0 ? `\n${inProgress.join("\n")}` : "None"} \n\n **Finals** ${finals.length > 0 ? `\n${finals.join("\n")}` : "None"}`;
-        await interaction.editReply(msg);
+
+        const scoresMsg = new ContainerBuilder()
+        .setAccentColor(0xFF0000)
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent(
+                    `**NFL Scoreboard**\n\n` +
+                    `**Scheduled Games**\n${scheduled.length > 0 ? scheduled.join("\n") : "None"}\n\n` +
+                    `**In Progress**\n${inProgress.length > 0 ? inProgress.join("\n") : "None"}\n\n` +
+                    `**Finals**\n${finals.length > 0 ? finals.join("\n") : "None"}`
+                )
+        );
+
+        await interaction.editReply({
+            flags: MessageFlags.IsComponentsV2,
+            components: [scoresMsg]
+        });
     }
 };
