@@ -8,4 +8,5 @@ export interface NflTeam {
     color?: string;
     alternateColor?: string;
     logo?: string;
+    isActive?: boolean;
 }

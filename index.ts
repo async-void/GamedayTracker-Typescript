@@ -22,6 +22,7 @@ for (const button of buttons){
 
 function shutdown(signal: string): void {
 	console.log(`${signal} received, closing the gateway connection`);
+     console.log("discord is closing the connection");
 	void client.destroy().then(() => {
 		process.exit(0);
 	});
@@ -36,8 +37,8 @@ client.once(Events.ClientReady, (ready) => {
     client.commands.forEach(cmd => console.log(cmd.data.name));
 });
 
-client.on('disconnect', (event: { code: number; reason: string }) => {
-    console.log(`Disconnected from Discord with code ${event.code} and reason ${event.reason}`);
+client.on(Events.ShardDisconnect, (event, shardId) => {
+    console.log(`Shard ${shardId} disconnected: code ${event.code}, reason ${event.reason}`);
 });
 client.on(Events.InteractionCreate, (interaction) => {
     handleInteraction(interaction, client);
