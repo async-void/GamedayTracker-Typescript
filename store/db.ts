@@ -22,6 +22,7 @@ export class DB {
                     discord_id TEXT PRIMARY KEY,
                     username TEXT NOT NULL,
                     xp INTEGER DEFAULT 0,
+                    favorite_team TEXT,
                     wins INTEGER DEFAULT 0,
                     balance INTEGER DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP

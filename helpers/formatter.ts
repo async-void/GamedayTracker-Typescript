@@ -1,3 +1,4 @@
+import { NflEmojiMapper } from "../mappers/nflEmojiMapper.ts";
 import type { NflStandingRow } from "../models/nfl/standings/NflStandingRow.ts";
 
 export function formatFlatStandings(rows: NflStandingRow[]): string {

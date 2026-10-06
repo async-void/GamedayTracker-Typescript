@@ -1,6 +1,6 @@
-export class NflEmojiMapper {
+export class nflLogoMapper {
     private static readonly map: Record<string, string> = {
-        ARI: "<:arizona:1556214363541733417>",
+        ARI: "https://cdn.discordapp.com/attachments/1556937690803347567/1556937949617070080/ARI.png?backend=b2&ex=6ac5faf5&is=6ac4a975&hm=9f8d43a3989f58dda5cb4823fc7fbc82124226691c1045e5596998b067aceb20&",
         ATL: "<:falcons:1556214355035426907>",
         BAL: "<:ravens:1556214369132613632>",
         BUF: "<:bills:1556214340443570236>",
@@ -17,7 +17,7 @@ export class NflEmojiMapper {
         JAX: "<:jaguars:1556214360710455327>",
         KC: "<:chiefs:1556214347615838308>",
         LAC: "<:chargers:1556214346676310086>",
-        LAR: "<:rams:1556214367840641054>",
+        LAR: "https://imgur.com/fvtTMi1.png",
         LV: "<:raiders:1556214366427156501>",
         MIA: "<:dolphins:1556214352619511889>",
         MIN: "<:vikings:1556214375071879169>",
