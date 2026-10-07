@@ -102,3 +102,18 @@ export function toConferenceRows(root: NflStandingsRoot): NflConferenceRows[] {
         .filter(conf => conf.rows.length > 0);
 }
 
+export async function getCurrentSeason(): Promise<number> {
+    const url = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/season";
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`Failed to fetch current season: ${res.statusText}`)
+    }
+
+    const json = await res.json();
+    if (typeof json.year === 'number') {
+        return json.year;
+    }
+
+    throw new Error("Season not available from Espn api");
+}
+

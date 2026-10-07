@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction, ContainerBuilder, MessageFlags, SlashCommandBuilder, TextDisplayBuilder } from "discord.js";
+import { ChatInputCommandInteraction, ContainerBuilder, MessageFlags, SectionBuilder, SeparatorBuilder, SeparatorSpacingSize, SlashCommandBuilder, TextDisplayBuilder } from "discord.js";
 
 import type { Command } from "../../command.ts";
 import type { NflScoreboard } from "../../models/nfl/NflScoreboard.ts";
 
-import { getScoreboard } from "../../espn/espnClient.ts";
+import { getScoreboard, getCurrentSeason } from "../../espn/espnClient.ts";
 import { NflEmojiMapper } from "../../mappers/nflEmojiMapper.ts";
 
 export const scoreboard: Command = {
@@ -15,10 +15,12 @@ export const scoreboard: Command = {
         await interaction.deferReply();
 
         const json = (await getScoreboard(0,0,0)) as NflScoreboard;
-
+        const season = getCurrentSeason();
         const finals: string[] = [];
         const inProgress: string[] = [];
-        const scheduled: string[] = [];
+        const groupedScheduled: Record<string, string[]> = {};
+        const dayOrder = ["Thu", "Sun", "Mon", "Tue", "Wed", "Fri", "Sat"];
+        let scheduledText = "";
 
         for (const event of json.events) {
             const comp = event.competitions[0];
@@ -60,27 +62,61 @@ export const scoreboard: Command = {
                     month: "short",
                     day: "numeric"
                 });
+                const eastern = "America/New_York";
+
+                const etDay = date.toLocaleDateString("en-US", {
+                    timeZone: eastern,
+                    weekday: "short"
+                });
 
                 line = `${awayEmoji} 🆚 ${homeEmoji} \\|\\| ${day} ${time} ET`;
-                scheduled.push(line);
+
+                if (!groupedScheduled[etDay]) groupedScheduled[etDay] = [];
+                groupedScheduled[etDay].push(line);
             }
         }
 
-        const scoresMsg = new ContainerBuilder()
+         for (const d of dayOrder) {
+            if (!groupedScheduled[d]) continue;
+
+                scheduledText += `### ${d}\n`;
+                scheduledText += groupedScheduled[d].join("\n");
+                scheduledText += "\n";
+            }
+
+            if (scheduledText.trim().length === 0) {
+                scheduledText = "None";
+            }
+
+        const fmt = (arr: any[]) => (arr.length > 0 ? arr.join("\n") : "None");
+
+        const container = new ContainerBuilder()
         .setAccentColor(0xFF0000)
         .addTextDisplayComponents(
-            new TextDisplayBuilder()
-                .setContent(
-                    `**NFL Scoreboard**\n\n` +
-                    `**Scheduled Games**\n${scheduled.length > 0 ? scheduled.join("\n") : "None"}\n\n` +
-                    `**In Progress**\n${inProgress.length > 0 ? inProgress.join("\n") : "None"}\n\n` +
-                    `**Finals**\n${finals.length > 0 ? finals.join("\n") : "None"}`
-                )
+            new TextDisplayBuilder().setContent(`# Scoreboard ${season}`)
+        )
+        .addSeparatorComponents(
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`**Scheduled Games**\n${scheduledText || "None"}`)
+        )
+        .addSeparatorComponents(
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`**In Progress**\n${fmt(inProgress)}`)
+        )
+        .addSeparatorComponents(
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(`**Finals**\n${fmt(finals)}`)
         );
 
         await interaction.editReply({
             flags: MessageFlags.IsComponentsV2,
-            components: [scoresMsg]
+            components: [ container ]
         });
     }
 };
